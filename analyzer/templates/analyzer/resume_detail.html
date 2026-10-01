@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+{% load static %}
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Resume Analysis</title>
+
+    <link rel="stylesheet"
+          href="{% static 'analyzer/style.css' %}">
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+
+    <!-- Header -->
+
+    <div class="header">
+
+        <h1>Resume Analysis</h1>
+
+        <p>
+            Detailed analysis of your uploaded resume
+        </p>
+
+    </div>
+
+
+
+    <!-- Resume Information -->
+
+    <div class="card">
+
+        <h2>Resume Information</h2>
+
+        <p>
+            <strong>File:</strong>
+            {{ resume.file.name }}
+        </p>
+
+        <br>
+
+        <a
+            href="{{ resume.file.url }}"
+            target="_blank"
+            class="history-button"
+        >
+            View Original Resume
+        </a>
+
+        <p>
+            <strong>Uploaded:</strong>
+            {{ resume.uploaded_at|date:"d M Y, h:i A" }}
+        </p>
+
+    </div>
+
+
+
+    <!-- Match Scores -->
+
+    <div class="card">
+
+        <h2>Resume Match Scores</h2>
+
+
+        <div class="result-grid">
+
+
+            <!-- Final Score -->
+
+            <div class="result-box">
+
+                <h3>Final Match Score</h3>
+
+                <div class="match-percentage">
+
+                    {{ resume.match_percentage }}%
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Skill Score -->
+
+            <div class="result-box">
+
+                <h3>Skill Match Score</h3>
+
+                <div class="match-percentage">
+
+                    {{ resume.skill_score }}%
+
+                </div>
+
+            </div>
+
+
+
+            <!-- NLP Score -->
+
+            <div class="result-box">
+
+                <h3>NLP Similarity</h3>
+
+                <div class="match-percentage">
+
+                    {{ resume.nlp_score }}%
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- Final Score Progress -->
+
+        <h3>Final Match Progress</h3>
+
+        <div class="match-bar-container">
+
+            <div
+                class="match-bar"
+                style="width: {{ resume.match_percentage }}%;"
+            >
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- Matched Skills -->
+
+    <div class="card">
+
+        <h2>Matched Skills</h2>
+
+        <ul class="skill-list">
+
+            {% for skill in matched_skills %}
+
+                <li>
+                    {{ skill }}
+                </li>
+
+            {% empty %}
+
+                <li>
+                    No matched skills.
+                </li>
+
+            {% endfor %}
+
+        </ul>
+
+    </div>
+
+
+
+    <!-- Missing Skills -->
+
+    <div class="card">
+
+        <h2>Missing Skills</h2>
+
+        <ul class="skill-list missing-list">
+
+            {% for skill in missing_skills %}
+
+                <li>
+                    {{ skill }}
+                </li>
+
+            {% empty %}
+
+                <li>
+                    No missing skills.
+                </li>
+
+            {% endfor %}
+
+        </ul>
+
+    </div>
+
+
+
+    <!-- Detected Skills -->
+
+    <div class="card">
+
+        <h2>Detected Skills</h2>
+
+        <ul class="skill-list">
+
+            {% for skill in detected_skills %}
+
+                <li>
+                    {{ skill }}
+                </li>
+
+            {% empty %}
+
+                <li>
+                    No skills detected.
+                </li>
+
+            {% endfor %}
+
+        </ul>
+
+    </div>
+
+
+
+    <!-- Job Description -->
+
+    <div class="card">
+
+        <h2>Job Description</h2>
+
+        <pre>{{ resume.job_description }}</pre>
+
+    </div>
+
+
+
+    <!-- Navigation -->
+
+    <div class="card">
+
+        <a href="{% url 'history' %}">
+            ← Back to Resume History
+        </a>
+
+        <br>
+        <br>
+
+        <a href="/" class="history-button">
+            Analyze Another Resume
+        </a>
+
+    </div>
+
+
+</div>
+
+</body>
+
+</html>

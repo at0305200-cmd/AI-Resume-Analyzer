@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+
+{% load static %}
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>AI Resume Analyzer</title>
+
+    <link rel="stylesheet"
+          href="{% static 'analyzer/style.css' %}">
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+
+    <!-- Header -->
+
+    <div class="header">
+
+        <h1>AI Resume Analyzer</h1>
+
+        <p>
+            Analyze your resume against a job description
+        </p>
+
+    </div>
+
+
+
+    <!-- Upload Form -->
+
+    <div class="card">
+
+        <h2>Upload Resume</h2>
+
+
+        <form
+            method="POST"
+            enctype="multipart/form-data"
+        >
+
+            {% csrf_token %}
+
+
+            <!-- Resume -->
+
+            <div class="form-group">
+
+                <label for="resume">
+                    Upload Resume (PDF only)
+                </label>
+
+                <input
+                    type="file"
+                    id="resume"
+                    name="resume"
+                    accept=".pdf"
+                    required
+                >
+
+            </div>
+
+
+
+            <!-- Job Description -->
+
+            <div class="form-group">
+
+                <label for="job_description">
+                    Job Description
+                </label>
+
+                <textarea
+                    id="job_description"
+                    name="job_description"
+                    rows="10"
+                    placeholder="Paste the job description here..."
+                    required
+                ></textarea>
+
+            </div>
+
+
+
+            <!-- Submit -->
+
+            <button type="submit">
+                Analyze Resume
+            </button>
+
+        </form>
+
+    </div>
+
+
+
+    <!-- Message -->
+
+    {% if message %}
+
+        <div class="message">
+
+            {{ message }}
+
+        </div>
+
+    {% endif %}
+
+
+
+    <!-- Analysis -->
+
+    {% if analysis %}
+
+
+        <!-- Scores -->
+
+        <div class="card">
+
+            <h2>Resume Analysis Result</h2>
+
+
+            <div class="result-grid">
+
+
+                <!-- Final Score -->
+
+                <div class="result-box">
+
+                    <h3>Final Match Score</h3>
+
+                    <div class="match-percentage">
+
+                        {{ analysis.match_percentage }}%
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- Skill Score -->
+
+                <div class="result-box">
+
+                    <h3>Skill Match Score</h3>
+
+                    <div class="match-percentage">
+
+                        {{ analysis.skill_score }}%
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- NLP Score -->
+
+                <div class="result-box">
+
+                    <h3>NLP Similarity</h3>
+
+                    <div class="match-percentage">
+
+                        {{ analysis.nlp_score }}%
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- Progress Bar -->
+
+            <h3>Final Match Progress</h3>
+
+            <div class="match-bar-container">
+
+                <div
+                    class="match-bar"
+                    style="width: {{ analysis.match_percentage }}%;"
+                >
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- Matched Skills -->
+
+        <div class="card">
+
+            <h2>Matched Skills</h2>
+
+            <ul class="skill-list">
+
+                {% for skill in analysis.matched_skills %}
+
+                    <li>
+                        {{ skill }}
+                    </li>
+
+                {% empty %}
+
+                    <li>
+                        No matched skills.
+                    </li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+
+
+        <!-- Missing Skills -->
+
+        <div class="card">
+
+            <h2>Missing Skills</h2>
+
+            <ul class="skill-list missing-list">
+
+                {% for skill in analysis.missing_skills %}
+
+                    <li>
+                        {{ skill }}
+                    </li>
+
+                {% empty %}
+
+                    <li>
+                        No missing skills.
+                    </li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+
+
+        <!-- Required Skills -->
+
+        <div class="card">
+
+            <h2>Required Skills</h2>
+
+            <ul class="skill-list required-list">
+
+                {% for skill in analysis.required_skills %}
+
+                    <li>
+                        {{ skill }}
+                    </li>
+
+                {% empty %}
+
+                    <li>
+                        No required skills detected.
+                    </li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+
+
+        <!-- Detected Skills -->
+
+        <div class="card">
+
+            <h2>Detected Skills in Resume</h2>
+
+            <ul class="skill-list">
+
+                {% for skill in detected_skills %}
+
+                    <li>
+                        {{ skill }}
+                    </li>
+
+                {% empty %}
+
+                    <li>
+                        No skills detected.
+                    </li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+
+
+        <!-- Extracted Text -->
+
+        <div class="card">
+
+            <h2>Extracted Resume Text</h2>
+
+            <pre>{{ extracted_text }}</pre>
+
+        </div>
+
+
+    {% endif %}
+
+
+
+    <!-- History -->
+
+    <div class="card">
+
+        <a
+            href="{% url 'history' %}"
+            class="history-button"
+        >
+            View Resume History
+        </a>
+
+    </div>
+
+
+</div>
+
+</body>
+
+</html>
