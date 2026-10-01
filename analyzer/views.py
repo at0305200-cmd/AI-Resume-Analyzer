@@ -24,74 +24,114 @@ def home(request):
             ""
         ).strip()
 
-
-        # Check resume file
+        # --------------------------------
+        # CHECK RESUME FILE
+        # --------------------------------
 
         if not resume_file:
 
-            message = "Please select a resume PDF file."
+            message = "ERROR: Resume file not selected."
             message_type = "error"
 
-
-        # Check PDF extension
+        # --------------------------------
+        # CHECK PDF
+        # --------------------------------
 
         elif not resume_file.name.lower().endswith(".pdf"):
 
-            message = "Only PDF files are allowed."
+            message = "ERROR: Only PDF files are allowed."
             message_type = "error"
 
-
-        # Check job description
+        # --------------------------------
+        # CHECK JOB DESCRIPTION
+        # --------------------------------
 
         elif not job_description:
 
-            message = "Please enter a job description."
+            message = "ERROR: Job description is empty."
             message_type = "error"
-
 
         else:
 
             try:
 
-                # Save uploaded resume
+                # ====================================
+                # STEP 1 - CREATE DATABASE RECORD
+                # ====================================
+
+                print("\n==============================")
+                print("STEP 1: Creating database record")
+                print("==============================")
 
                 resume = Resume.objects.create(
                     file=resume_file,
                     job_description=job_description
                 )
 
+                print("SUCCESS: Database record created")
+                print("Resume ID:", resume.id)
 
-                # Extract text from PDF
+                # ====================================
+                # STEP 2 - EXTRACT PDF TEXT
+                # ====================================
+
+                print("\n==============================")
+                print("STEP 2: Extracting PDF text")
+                print("==============================")
 
                 extracted_text = extract_text_from_pdf(
                     resume.file.path
                 )
 
+                print(
+                    "Extracted text length:",
+                    len(extracted_text)
+                )
 
-                # Check extracted text
+                # --------------------------------
+                # CHECK EXTRACTED TEXT
+                # --------------------------------
 
                 if not extracted_text.strip():
 
+                    print("ERROR: No text extracted from PDF.")
+
                     message = (
-                        "Could not extract readable text "
-                        "from this PDF."
+                        "ERROR: PDF text could not be extracted."
                     )
 
                     message_type = "error"
 
                     resume.delete()
 
-
                 else:
 
-                    # Detect skills
+                    print("SUCCESS: PDF text extracted")
+
+                    # ====================================
+                    # STEP 3 - DETECT SKILLS
+                    # ====================================
+
+                    print("\n==============================")
+                    print("STEP 3: Detecting skills")
+                    print("==============================")
 
                     detected_skills = detect_skills(
                         extracted_text
                     )
 
+                    print(
+                        "Detected skills:",
+                        detected_skills
+                    )
 
-                    # Match skills
+                    # ====================================
+                    # STEP 4 - MATCH SKILLS
+                    # ====================================
+
+                    print("\n==============================")
+                    print("STEP 4: Matching skills")
+                    print("==============================")
 
                     analysis = match_skills(
                         detected_skills,
@@ -99,8 +139,33 @@ def home(request):
                         SKILLS
                     )
 
+                    print(
+                        "Required skills:",
+                        analysis["required_skills"]
+                    )
 
-                    # Calculate NLP similarity
+                    print(
+                        "Matched skills:",
+                        analysis["matched_skills"]
+                    )
+
+                    print(
+                        "Missing skills:",
+                        analysis["missing_skills"]
+                    )
+
+                    print(
+                        "Skill score:",
+                        analysis["match_percentage"]
+                    )
+
+                    # ====================================
+                    # STEP 5 - NLP SIMILARITY
+                    # ====================================
+
+                    print("\n==============================")
+                    print("STEP 5: NLP similarity")
+                    print("==============================")
 
                     try:
 
@@ -111,25 +176,53 @@ def home(request):
 
                     except ValueError:
 
+                        print(
+                            "WARNING: NLP similarity "
+                            "could not be calculated."
+                        )
+
                         nlp_score = 0
 
+                    print(
+                        "NLP score:",
+                        nlp_score
+                    )
 
-                    # Skill score
+                    # ====================================
+                    # STEP 6 - CALCULATE FINAL SCORE
+                    # ====================================
+
+                    print("\n==============================")
+                    print("STEP 6: Calculating final score")
+                    print("==============================")
 
                     skill_score = analysis[
                         "match_percentage"
                     ]
-
-
-                    # Final score
 
                     final_score = (
                         skill_score * 0.60
                         + nlp_score * 0.40
                     )
 
+                    print(
+                        "Skill score:",
+                        skill_score
+                    )
 
-                    # Store scores
+                    print(
+                        "NLP score:",
+                        nlp_score
+                    )
+
+                    print(
+                        "Final score:",
+                        final_score
+                    )
+
+                    # ====================================
+                    # STORE ANALYSIS RESULTS
+                    # ====================================
 
                     analysis["nlp_score"] = round(
                         nlp_score,
@@ -146,60 +239,49 @@ def home(request):
                         2
                     )
 
+                    # ====================================
+                    # STEP 7 - SAVE ANALYSIS
+                    # ====================================
 
-                    # Save extracted text
+                    print("\n==============================")
+                    print("STEP 7: Saving analysis")
+                    print("==============================")
 
                     resume.extracted_text = (
                         extracted_text
                     )
 
-
-                    # Save detected skills
-
                     resume.detected_skills = ", ".join(
                         detected_skills
                     )
-
-
-                    # Save final score
 
                     resume.match_percentage = (
                         analysis["match_percentage"]
                     )
 
-
-                    # Save NLP score
-
                     resume.nlp_score = (
                         analysis["nlp_score"]
                     )
-
-
-                    # Save skill score
 
                     resume.skill_score = (
                         analysis["skill_score"]
                     )
 
-
-                    # Save matched skills
-
                     resume.matched_skills = ", ".join(
                         analysis["matched_skills"]
                     )
-
-
-                    # Save missing skills
 
                     resume.missing_skills = ", ".join(
                         analysis["missing_skills"]
                     )
 
-
-                    # Save database record
-
                     resume.save()
 
+                    print("SUCCESS: Analysis saved")
+
+                    print("\n==============================")
+                    print("ANALYSIS COMPLETED SUCCESSFULLY")
+                    print("==============================\n")
 
                     message = (
                         "Resume analyzed and saved successfully!"
@@ -207,17 +289,42 @@ def home(request):
 
                     message_type = "success"
 
+            # ====================================
+            # ERROR HANDLING
+            # ====================================
 
-            except Exception:
+            except Exception as e:
+
+                print("\n")
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                print("ANALYSIS FAILED")
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
+                print(
+                    "ERROR TYPE:",
+                    type(e).__name__
+                )
+
+                print(
+                    "ERROR:",
+                    str(e)
+                )
+
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                print("\n")
 
                 message = (
-                    "Something went wrong while "
-                    "analyzing the resume. "
-                    "Please try another PDF."
+                    "Analysis failed: "
+                    + type(e).__name__
+                    + " - "
+                    + str(e)
                 )
 
                 message_type = "error"
 
+    # ====================================
+    # RENDER HOME PAGE
+    # ====================================
 
     return render(
         request,
@@ -231,6 +338,10 @@ def home(request):
         }
     )
 
+
+# ========================================
+# RESUME HISTORY
+# ========================================
 
 def history(request):
 
@@ -247,6 +358,10 @@ def history(request):
     )
 
 
+# ========================================
+# RESUME DETAIL
+# ========================================
+
 def resume_detail(request, resume_id):
 
     resume = get_object_or_404(
@@ -254,6 +369,9 @@ def resume_detail(request, resume_id):
         id=resume_id
     )
 
+    # --------------------------------
+    # MATCHED SKILLS
+    # --------------------------------
 
     matched_skills = []
 
@@ -264,6 +382,9 @@ def resume_detail(request, resume_id):
             for skill in resume.matched_skills.split(",")
         ]
 
+    # --------------------------------
+    # MISSING SKILLS
+    # --------------------------------
 
     missing_skills = []
 
@@ -274,6 +395,9 @@ def resume_detail(request, resume_id):
             for skill in resume.missing_skills.split(",")
         ]
 
+    # --------------------------------
+    # DETECTED SKILLS
+    # --------------------------------
 
     detected_skills = []
 
@@ -284,6 +408,9 @@ def resume_detail(request, resume_id):
             for skill in resume.detected_skills.split(",")
         ]
 
+    # --------------------------------
+    # RENDER DETAIL PAGE
+    # --------------------------------
 
     return render(
         request,
