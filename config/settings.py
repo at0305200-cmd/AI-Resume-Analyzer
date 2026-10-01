@@ -1,38 +1,48 @@
 from pathlib import Path
 import os
+import dj_database_url
 
-
-# ============================================================
-# BASE DIRECTORY
-# ============================================================
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# ============================================================
+# --------------------------------------------------
 # SECURITY
-# ============================================================
+# --------------------------------------------------
 
 SECRET_KEY = os.environ.get(
     "SECRET_KEY",
     "django-insecure-local-development-key"
 )
 
-DEBUG = True
+
+# --------------------------------------------------
+# DEBUG
+# --------------------------------------------------
+
+DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
+
+
+# --------------------------------------------------
+# ALLOWED HOSTS
+# --------------------------------------------------
 
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
 ]
 
+render_hostname = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 
-# ============================================================
-# APPLICATIONS
-# ============================================================
+if render_hostname:
+    ALLOWED_HOSTS.append(render_hostname)
+
+
+# --------------------------------------------------
+# INSTALLED APPS
+# --------------------------------------------------
 
 INSTALLED_APPS = [
-
-    # Django apps
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -40,46 +50,40 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
-    # Our application
     "analyzer",
 ]
 
 
-# ============================================================
+# --------------------------------------------------
 # MIDDLEWARE
-# ============================================================
+# --------------------------------------------------
 
 MIDDLEWARE = [
-
     "django.middleware.security.SecurityMiddleware",
 
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+
     "django.contrib.sessions.middleware.SessionMiddleware",
-
     "django.middleware.common.CommonMiddleware",
-
     "django.middleware.csrf.CsrfViewMiddleware",
-
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-
     "django.contrib.messages.middleware.MessageMiddleware",
-
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
 
-# ============================================================
+# --------------------------------------------------
 # URL CONFIGURATION
-# ============================================================
+# --------------------------------------------------
 
 ROOT_URLCONF = "config.urls"
 
 
-# ============================================================
+# --------------------------------------------------
 # TEMPLATES
-# ============================================================
+# --------------------------------------------------
 
 TEMPLATES = [
-
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
 
@@ -88,64 +92,52 @@ TEMPLATES = [
         "APP_DIRS": True,
 
         "OPTIONS": {
-
             "context_processors": [
-
                 "django.template.context_processors.request",
-
                 "django.contrib.auth.context_processors.auth",
-
                 "django.contrib.messages.context_processors.messages",
-
             ],
         },
     },
 ]
 
 
-# ============================================================
+# --------------------------------------------------
 # WSGI
-# ============================================================
+# --------------------------------------------------
 
 WSGI_APPLICATION = "config.wsgi.application"
 
 
-# ============================================================
+# --------------------------------------------------
 # DATABASE
-# ============================================================
+# --------------------------------------------------
 
 DATABASES = {
-
-    "default": {
-
-        "ENGINE": "django.db.backends.sqlite3",
-
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+    )
 }
 
 
-# ============================================================
+# --------------------------------------------------
 # PASSWORD VALIDATION
-# ============================================================
+# --------------------------------------------------
 
 AUTH_PASSWORD_VALIDATORS = [
-
     {
         "NAME":
         "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
-
     {
         "NAME":
         "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
-
     {
         "NAME":
         "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
-
     {
         "NAME":
         "django.contrib.auth.password_validation.NumericPasswordValidator",
@@ -153,16 +145,11 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# ============================================================
-# LANGUAGE
-# ============================================================
+# --------------------------------------------------
+# LANGUAGE AND TIME
+# --------------------------------------------------
 
 LANGUAGE_CODE = "en-us"
-
-
-# ============================================================
-# TIME ZONE
-# ============================================================
 
 TIME_ZONE = "Asia/Kolkata"
 
@@ -171,48 +158,55 @@ USE_I18N = True
 USE_TZ = True
 
 
-# ============================================================
+# --------------------------------------------------
 # STATIC FILES
-# ============================================================
+# --------------------------------------------------
 
 STATIC_URL = "/static/"
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 
-# ============================================================
-# MEDIA FILES
-# ============================================================
+# --------------------------------------------------
+# MEDIA / UPLOADED FILES
+# --------------------------------------------------
 
 MEDIA_URL = "/media/"
 
 MEDIA_ROOT = BASE_DIR / "media"
 
 
-# ============================================================
+# --------------------------------------------------
 # STORAGE
-# ============================================================
+# --------------------------------------------------
 
 STORAGES = {
-
-    # Uploaded files such as PDF resumes
     "default": {
-
         "BACKEND":
         "django.core.files.storage.FileSystemStorage",
     },
 
-    # CSS, JavaScript and other static files
     "staticfiles": {
-
         "BACKEND":
-        "django.contrib.staticfiles.storage.StaticFilesStorage",
+        "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
 
 
-# ============================================================
+# --------------------------------------------------
+# CSRF
+# --------------------------------------------------
+
+csrf_origin = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+
+if csrf_origin:
+    CSRF_TRUSTED_ORIGINS = [
+        f"https://{csrf_origin}"
+    ]
+
+
+# --------------------------------------------------
 # DEFAULT PRIMARY KEY
-# ============================================================
+# --------------------------------------------------
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
